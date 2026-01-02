@@ -1,0 +1,26 @@
+[tool.poetry]
+authors = [
+    "Georgios Konstantopoulos <me@gakonst.com>",
+    "Nikolas Papaioannou <n0k0@hacky.software>",
+    "Brock Smedley <brock@flashbots.net>",
+]
+description = ""
+name = "flashbots"
+readme = "README.md"
+version = "2.0.0"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+web3 = ">=6, <7"
+
+[tool.poetry.dev-dependencies]
+ruff = "^0.5.4"
+pytest-recording = "^0.11.0"
+vcrpy = "^4.1.1"
+
+[tool.ruff]
+target-version = "py312"
+
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.0.0"]
