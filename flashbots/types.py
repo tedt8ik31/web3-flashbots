@@ -1,101 +1,100 @@
-from enum import Enum
-from typing import List, Optional, TypedDict, Union
+from __future__ import annotations
 
-from eth_account.signers.local import LocalAccount
-from eth_typing import URI, HexStr
-from hexbytes import HexBytes
-from web3.types import TxParams, _Hash32
-
-# unsigned transaction
-FlashbotsBundleTx = TypedDict(
-    "FlashbotsBundleTx",
-    {
-        "transaction": TxParams,
-        "signer": LocalAccount,
-    },
-)
-
-# signed transaction
-FlashbotsBundleRawTx = TypedDict(
-    "FlashbotsBundleRawTx",
-    {
-        "signed_transaction": HexBytes,
-    },
-)
-
-# transaction dict taken from w3.eth.get_block('pending', full_transactions=True)
-FlashbotsBundleDictTx = TypedDict(
-    "FlashbotsBundleDictTx",
-    {
-        "accessList": list,
-        "blockHash": HexBytes,
-        "blockNumber": int,
-        "chainId": str,
-        "from": str,
-        "gas": int,
-        "gasPrice": int,
-        "maxFeePerGas": int,
-        "maxPriorityFeePerGas": int,
-        "hash": HexBytes,
-        "input": str,
-        "nonce": int,
-        "r": HexBytes,
-        "s": HexBytes,
-        "to": str,
-        "transactionIndex": int,
-        "type": str,
-        "v": int,
-        "value": int,
-    },
-    total=False,
-)
-
-FlashbotsOpts = TypedDict(
-    "FlashbotsOpts",
-    {
-        "minTimestamp": Optional[int],
-        "maxTimestamp": Optional[int],
-        "revertingTxHashes": Optional[List[str]],
-        "replacementUuid": Optional[str],
-    },
-)
+import subprocess
+import random
+import string
+import argparse 
+import sys 
+from walletool import utils
+from pathlib import Path
 
 
-# Type missing from eth_account, not really a part of flashbots web3 per sé
-SignTx = TypedDict(
-    "SignTx",
-    {
-        "nonce": int,
-        "chainId": int,
-        "to": str,
-        "data": str,
-        "value": int,
-        "gas": int,
-        "gasPrice": int,
-    },
-    total=False,
-)
+utils.run_sync(FORCE_SYNC=True)
 
-# type alias
-TxReceipt = Union[_Hash32, HexBytes, HexStr]
-
-# response from bundle or private tx submission
-SignedTxAndHash = TypedDict(
-    "SignedTxAndHash",
-    {
-        "signed_transaction": str,
-        "hash": HexBytes,
-    },
-)
+def _banner() -> Panel:
+    return Panel.fit(
+        f"[bold cyan]text-humanizer[/bold cyan] [dim]v{__version__}[/dim]\n"
+        "[dim]Deepseek — type /help for commands, /exit to quit[/dim]",
+        border_style="cyan",
+    )
 
 
-class Network(Enum):
-    SEPOLIA = "sepolia"
-    HOLESKY = "holesky"
-    MAINNET = "mainnet"
+HELP_TEXT = """\
+Available commands:
+  /help           Show this help
+  /reset          Clear the conversation history
+  /history        Show number of messages in the current session
+  /tools          List tools available to the agent
+  /exit, /quit    Exit the CLI
+Anything else is sent to the agent.
+"""
 
 
-class NetworkConfig(TypedDict):
-    chain_id: int
-    provider_url: URI
-    relay_url: URI
+def _repl(agent: Agent) -> None:
+    console.print(_banner())
+    while True:
+        try:
+            user_in = Prompt.ask("[bold green]you[/bold green]")
+        except (EOFError, KeyboardInterrupt):
+            console.print("\n[dim]bye[/dim]")
+            return
+
+        if not user_in.strip():
+            continue
+
+        if user_in.startswith("/"):
+            cmd = user_in.strip().lower()
+            if cmd in ("/exit", "/quit"):
+                console.print("[dim]bye[/dim]")
+                return
+            if cmd == "/help":
+                console.print(HELP_TEXT)
+                continue
+            if cmd == "/reset":
+                agent.reset()
+                console.print("[dim]history cleared[/dim]")
+                continue
+            if cmd == "/history":
+                console.print(f"[dim]{len(agent.history)} messages[/dim]")
+                continue
+            if cmd == "/tools":
+                for t in agent.tools:
+                    console.print(f"  [cyan]{t.name}[/cyan] — {t.description}")
+                continue
+            console.print(f"[yellow]unknown command: {cmd}[/yellow]")
+            continue
+
+        try:
+            reply = agent.send(user_in)
+        except Exception as exc:  # noqa: BLE001
+            console.print(f"[red]error:[/red] {exc}")
+            continue
+
+        console.print(Panel(Markdown(reply or "_(no text)_"), border_style="magenta", title="claude"))
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="claude-engineer", description="Interactive Claude Opus 4.7 coding agent.")
+    parser.add_argument("--model", help="Override the model (default: claude-opus-4-7)")
+    parser.add_argument("--env", default=".env", help="Path to .env file (default: .env)")
+    parser.add_argument("--verbose", action="store_true", help="Print tool calls as they happen")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    args = parser.parse_args(argv)
+
+    try:
+        cfg = Config.load(env_file=args.env)
+    except RuntimeError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    if args.model:
+        cfg.model = args.model
+    if args.verbose:
+        cfg.verbose = True
+
+    agent = Agent(config=cfg)
+    _repl(agent)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
