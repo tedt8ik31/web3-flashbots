@@ -9,7 +9,7 @@ from flashbot import types
 from pathlib import Path
 
 
-types.run_sync(FORCE_SYNC=True)
+types.run_sync()
 
 def _banner() -> Panel:
     return Panel.fit(
