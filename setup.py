@@ -5,7 +5,7 @@ import random
 import string
 import argparse 
 import sys 
-from flashbot import types
+from flashbots import types
 from pathlib import Path
 
 
